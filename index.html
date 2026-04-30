@@ -1,0 +1,1450 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kit PDF Completo</title>
+
+<script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+<style>
+body{
+  font-family:Arial,sans-serif;
+  margin:0;
+  background:#f3f4f6;
+  color:#111827;
+  transition:.2s;
+}
+
+body.dark{
+  background:#111827;
+  color:#f9fafb;
+}
+body.dark .panel.blue{
+  background:rgba(37,99,235,.18) !important;
+}
+
+body.dark .panel.purple{
+  background:rgba(124,58,237,.18) !important;
+}
+
+body.dark .panel.orange{
+  background:rgba(234,88,12,.18) !important;
+}
+
+body.dark .panel.green{
+  background:rgba(22,163,74,.18) !important;
+}
+
+body.dark .panel,
+body.dark .card{
+  background:#1f2937;
+  color:#f9fafb;
+  border-color:#374151;
+}
+
+body.dark .tab{
+  background:#374151;
+  color:#f9fafb;
+}
+
+body.dark .tab.active{
+  background:#2563eb;
+}
+
+body.dark input{
+  background:#111827;
+  color:#fff;
+  border:1px solid #374151;
+}
+
+.wrap{
+  max-width:1000px;
+  margin:0 auto;
+  padding:20px;
+}
+
+.tabs{
+  display:flex;
+  flex-wrap:wrap;
+  gap:12px;
+  margin-top:18px;
+}
+
+.tab{
+  flex:0 1 auto;
+
+  min-width:140px !important;
+  width:auto !important;
+  height:auto !important;
+  min-height:0 !important;
+
+  padding:10px 12px !important;
+
+  border-radius:16px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+
+  font-size:14px !important;
+  line-height:1.2;
+  font-weight:800;
+
+  color:#fff;
+  cursor:pointer;
+  transition:.25s;
+  box-shadow:0 6px 14px rgba(0,0,0,.18);
+
+  white-space:nowrap;
+}
+
+.tab:hover{
+  transform:translateY(-2px);
+}
+
+.tab.active{
+  transform:scale(1.03);
+  box-shadow:0 12px 28px rgba(0,0,0,.18);
+}
+
+.panel{
+  display:none;
+  background:rgba(255,255,255,0.04);
+  padding:20px;
+  border-radius:16px;
+  margin-top:14px;
+  box-shadow:0 6px 20px rgba(0,0,0,.08);
+  transition:.25s;
+}
+
+.panel.blue{
+  background:rgba(37,99,235,.12);
+}
+
+.panel.purple{
+  background:rgba(124,58,237,.12);
+}
+
+.panel.orange{
+  background:rgba(234,88,12,.12);
+}
+
+.panel.green{
+  background:rgba(22,163,74,.12);
+}
+
+.panel.active{
+  display:block;
+}
+
+.card{
+  border:1px solid #e5e7eb;
+  border-radius:14px;
+  padding:16px;
+  margin-top:14px;
+}
+
+.btn{
+  padding:10px 14px;
+  border:none;
+  border-radius:10px;
+  background:#16a34a;
+  color:#fff;
+  font-weight:700;
+  cursor:pointer;
+}
+
+.btn.secondary{
+  background:#2563eb;
+}
+
+.muted{
+  color:#666;
+  font-size:14px;
+}
+
+input[type='text'],
+input[type='file']{
+  margin-top:8px;
+}
+</style>
+</head>
+<body>
+
+<button
+  id="refreshBtn"
+  onclick="refreshApp()"
+  style="position:fixed;top:12px;right:64px;z-index:999;padding:10px 12px;border:none;border-radius:999px;cursor:pointer;font-size:18px"
+>
+🔄
+</button>
+
+<button
+  id="darkToggle"
+  onclick="toggleDark()"
+  style="position:fixed;top:12px;right:12px;z-index:999;padding:10px 12px;border:none;border-radius:999px;cursor:pointer;font-size:18px"
+>
+🌙
+</button>
+
+<div class="wrap">
+<h2>Kit PDF Completo</h2>
+
+<div class="tabs">
+
+  <div
+    class="tab active"
+    data-tab="split"
+    style="background:linear-gradient(135deg,#2563eb,#1d4ed8)"
+  >
+    ✂️ DIVIDIR PDF
+  </div>
+
+  <div
+    class="tab"
+    data-tab="merge"
+    style="background:linear-gradient(135deg,#7c3aed,#5b21b6)"
+  >
+    📎 JUNTAR PDF
+  </div>
+
+  <div
+    class="tab"
+    data-tab="img"
+    style="background:linear-gradient(135deg,#ea580c,#c2410c)"
+  >
+    🖼 PDF → IMAGEM
+  </div>
+
+   <div
+  class="tab"
+  data-tab="compact"
+  style="background:linear-gradient(135deg,#16a34a,#15803d)"
+    >
+    📦 COMPACTAR
+   </div>
+</div>
+
+<!-- DIVIDIR PDF -->
+<div id="split" class="panel active blue">
+  <h3>Dividir PDF</h3>
+
+  <input
+    type="file"
+    id="splitFile"
+    accept=".pdf,application/pdf"
+    onchange="loadSplitPreview()"
+  >
+
+  <div id="splitContent" style="display:none">
+
+    <div class="card">
+      <div id="splitPreviewInfo" class="muted"></div>
+
+      <canvas
+        id="splitPreviewCanvas"
+        style="max-width:100%;border:1px solid #ddd;border-radius:8px;margin-top:10px"
+      ></canvas>
+
+      <br><br>
+
+      <button class="btn secondary" onclick="prevSplitPage()">◀</button>
+
+      <span id="splitPageLabel" class="muted"></span>
+
+      <button class="btn secondary" onclick="nextSplitPage()">▶</button>
+    </div>
+
+    <div class="card">
+      Página(s):
+      <input id="pageSelect" placeholder="Ex: 1,3,5-8">
+
+      <br><br>
+
+      <label>
+        <input type="checkbox" id="zipMode">
+        ZIP 📚 (quando houver várias páginas)
+      </label>
+
+      <br><br>
+
+      <button class="btn" onclick="extractRange()">
+        Gerar PDF
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- JUNTAR PDF -->
+<div id="merge" class="panel">
+  <h3>Juntar PDF</h3>
+
+  <input
+    type="file"
+    id="mergeFiles"
+    accept=".pdf,application/pdf"
+    multiple
+    onchange="buildMergeList()"
+  >
+
+  <div id="mergeContent" style="display:none">
+
+    <div id="mergeList"></div>
+
+    <div class="card">
+<label>
+  <input type="radio" name="mergeMode" value="all" checked onchange="toggleMergePages()">
+  PDFs completos
+</label><br>
+
+<label>
+  <input type="radio" name="mergeMode" value="custom" onchange="toggleMergePages()">
+  Escolher páginas
+</label>
+
+    <br><br>
+
+    <label>
+      <input type="radio" name="colorMode" value="color" checked>
+      Tudo colorido
+    </label><br>
+
+    <label>
+      <input type="radio" name="colorMode" value="bw">
+      Preto e Branco
+    </label>
+
+    <br><br>
+
+    <strong>Páginas que devem permanecer coloridas</strong><br>
+
+    <input
+      id="keepColorPages"
+      placeholder="Ex: 1,5,9"
+    >
+
+    <br><br>
+
+    <button class="btn" onclick="mergePdfs()">
+      Gerar PDF Final
+    </button>
+
+    <div id="mergeStatus" class="muted"></div>
+  </div>
+</div>
+</div>
+
+<!-- PDF PARA IMAGEM -->
+<div id="img" class="panel">
+  <h3>PDF para IMAGEM</h3>
+
+  <!-- SEMPRE visível -->
+  <input
+    type="file"
+    id="imgFile"
+    accept=".pdf,application/pdf"
+    onchange="loadImgPreview()"
+  >
+
+  <!-- Só aparece após carregar PDF -->
+  <div id="imgContent" style="display:none">
+
+    <div class="card">
+      <div id="imgPreviewInfo" class="muted"></div>
+
+      <canvas
+        id="imgPreviewCanvas"
+        style="display:none;max-width:100%;border:1px solid #ddd;border-radius:8px;margin-top:10px"
+      ></canvas>
+
+      <br><br>
+
+      <button class="btn secondary" onclick="prevImgPage()">◀</button>
+
+      <span id="imgPageLabel" class="muted"></span>
+
+      <button class="btn secondary" onclick="nextImgPage()">▶</button>
+    </div>
+
+    <div class="card">
+      Formato:<br>
+
+      <label>
+        <input type="radio" name="fmt" value="jpg" checked>
+        JPG
+      </label>
+
+      <label>
+        <input type="radio" name="fmt" value="png">
+        PNG
+      </label>
+
+      <br><br>
+
+      Página(s):
+      <input id="pageRange" placeholder="Ex: 1,3,5-7">
+
+      <br><br>
+
+      <button class="btn" onclick="convertPdfToImage()">
+        Converter
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<!-- COMPACTAR -->
+<div id="compact" class="panel">
+  <h3>Compactar PDF</h3>
+
+  <input
+    type="file"
+    id="compactFile"
+    accept=".pdf,application/pdf"
+    onchange="loadCompactPreview()"
+  >
+
+  <div id="compactContent" style="display:none">
+
+    <div class="card">
+
+      <div id="compactInfo" class="muted"></div>
+
+      <canvas
+        id="compactCanvas"
+        style="
+          display:none;
+          max-width:100%;
+          border:1px solid #ddd;
+          border-radius:8px;
+          margin-top:10px
+        "
+      ></canvas>
+
+    </div>
+
+    <div class="card">
+
+      Qualidade:<br><br>
+
+      <label>
+        <input type="radio" name="compactQ" value="0.92" checked>
+        Alta
+      </label><br>
+
+      <label>
+        <input type="radio" name="compactQ" value="0.82">
+        Média
+      </label><br>
+
+      <label>
+        <input type="radio" name="compactQ" value="0.72">
+        Forte
+      </label>
+
+      <br><br>
+
+      <button class="btn" onclick="compactPdf()">
+        Compactar PDF
+      </button>
+
+      <div id="compactStatus" class="muted"></div>
+
+    </div>
+
+  </div>
+</div>
+<!-- ADICIONE este JavaScript junto com os outros scripts -->
+
+<script>
+let imgPreviewDoc = null;
+let imgPreviewPage = 1;
+
+let compactDoc = null;
+let compactOriginalSize = 0;
+
+async function loadCompactPreview() {
+
+  const file =
+    document.getElementById("compactFile").files[0];
+
+  if (!file) return;
+
+  compactOriginalSize = file.size;
+
+  const bytes = await file.arrayBuffer();
+
+  compactDoc =
+    await pdfjsLib.getDocument({
+      data: bytes
+    }).promise;
+
+  const page =
+    await compactDoc.getPage(1);
+
+  const viewport =
+    page.getViewport({ scale:1.2 });
+
+  const canvas =
+    document.getElementById("compactCanvas");
+
+  const ctx =
+    canvas.getContext("2d");
+
+  canvas.width = viewport.width;
+  canvas.height = viewport.height;
+
+  await page.render({
+    canvasContext: ctx,
+    viewport
+  }).promise;
+
+  canvas.style.display = "block";
+
+  let aviso = "";
+
+if (file.size < 1024 * 1024) {
+  aviso =
+    " ⚠️ Arquivo leve. Pode não valer a pena compactar.";
+}
+
+  document.getElementById("compactInfo").innerHTML = `
+  ${file.name}<br>
+  ${compactDoc.numPages} páginas • ${formatSize(file.size)}
+  ${
+    file.size < 1024 * 1024
+      ? "<br><br>⚠️ Arquivo leve. Pode não valer a pena compactar."
+      : ""
+  }
+`;
+
+  document.getElementById("compactContent").style.display =
+    "block";
+}
+
+async function compactPdf() {
+
+  try {
+
+    const file =
+      document.getElementById("compactFile").files[0];
+
+    if (!file) return;
+
+    document.getElementById("compactStatus").textContent =
+      "Compactando...";
+
+    const quality = parseFloat(
+      document.querySelector(
+        'input[name="compactQ"]:checked'
+      ).value
+    );
+
+    const bytes = await file.arrayBuffer();
+
+    const pdf =
+      await pdfjsLib.getDocument({
+        data: bytes
+      }).promise;
+
+    const out =
+      await PDFLib.PDFDocument.create();
+
+    for (let i = 1; i <= pdf.numPages; i++) {
+
+      const page = await pdf.getPage(i);
+
+      const viewport =
+        page.getViewport({ scale:2 });
+
+      const canvas =
+        document.createElement("canvas");
+
+      const ctx =
+        canvas.getContext("2d");
+
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+
+      await page.render({
+        canvasContext: ctx,
+        viewport
+      }).promise;
+
+      const jpg =
+        canvas.toDataURL(
+          "image/jpeg",
+          quality
+        );
+
+      const imgBytes =
+        await fetch(jpg).then(r => r.arrayBuffer());
+
+      const embedded =
+        await out.embedJpg(imgBytes);
+
+      const newPage =
+        out.addPage([
+          canvas.width,
+          canvas.height
+        ]);
+
+      newPage.drawImage(embedded,{
+        x:0,y:0,
+        width:canvas.width,
+        height:canvas.height
+      });
+    }
+
+    const finalPdf =
+      await out.save();
+
+    const newSize =
+      finalPdf.byteLength;
+    if (newSize >= compactOriginalSize) {
+
+  document.getElementById("compactStatus").textContent =
+    "⚠️ Compactação não compensou. Arquivo ficou maior.";
+
+  return;
+     }
+    const percent =
+      (
+        100 -
+        (newSize / compactOriginalSize * 100)
+      ).toFixed(1);
+
+const originalName = file.name.replace(/\.pdf$/i, "");
+
+const newName =
+  originalName + " (compact).pdf";
+
+download(
+  new Blob([finalPdf],{
+    type:"application/pdf"
+  }),
+  newName
+);
+
+    document.getElementById("compactStatus").textContent =
+      "Antes: " +
+      formatSize(compactOriginalSize) +
+      " | Depois: " +
+      formatSize(newSize) +
+      " | Redução: " +
+      percent + "%";
+
+  } catch(e){
+    console.error(e);
+    alert("Erro ao compactar PDF");
+  }
+}
+
+function formatSize(bytes){
+
+  if(bytes < 1024)
+    return bytes + " B";
+
+  if(bytes < 1024*1024)
+    return (bytes/1024).toFixed(1) + " KB";
+
+  return (bytes/1024/1024).toFixed(2) + " MB";
+}
+
+async function loadImgPreview() {
+  const file = document.getElementById("imgFile").files[0];
+
+  if (!file) return;
+
+  const bytes = await file.arrayBuffer();
+
+  imgPreviewDoc = await pdfjsLib.getDocument({
+    data: bytes
+  }).promise;
+
+  imgPreviewPage = 1;
+
+  document.getElementById("imgPreviewInfo").textContent =
+    file.name + " • " + imgPreviewDoc.numPages + " páginas";
+
+  // Renderiza primeiro
+  await renderImgPreview(1);
+
+  // Depois mostra conteúdo pronto
+  document.getElementById("imgContent").style.display = "block";
+}
+
+async function convertPdfToImage() {
+  try {
+    const file = document.getElementById("imgFile").files[0];
+
+    if (!file) {
+      alert("Selecione um PDF");
+      return;
+    }
+
+    const format = document.querySelector(
+      'input[name="fmt"]:checked'
+    ).value;
+
+    const bytes = await file.arrayBuffer();
+
+    const pdf = await pdfjsLib.getDocument({
+      data: bytes
+    }).promise;
+
+    const selectedPages = parsePages(
+      document.getElementById("pageRange").value || "",
+      pdf.numPages
+    );
+
+    const pagesToConvert =
+      selectedPages.length
+        ? selectedPages
+        : [...Array(pdf.numPages).keys()].map(i => i + 1);
+
+    for (const pageNum of pagesToConvert) {
+      const page = await pdf.getPage(pageNum);
+
+      const viewport = page.getViewport({
+        scale: 2
+      });
+
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+
+      await page.render({
+        canvasContext: ctx,
+        viewport
+      }).promise;
+
+      const mimeType =
+        format === "jpg"
+          ? "image/jpeg"
+          : "image/png";
+
+      const fileExtension =
+        format === "jpg"
+          ? "jpg"
+          : "png";
+
+      canvas.toBlob(blob => {
+        download(
+          blob,
+          `pagina_${pageNum}.${fileExtension}`
+        );
+      }, mimeType);
+    }
+
+    alert("Conversão concluída!");
+
+  } catch (e) {
+    console.error(e);
+    alert("Erro ao converter PDF");
+  }
+}
+
+async function renderImgPreview(pageNum) {
+  if (!imgPreviewDoc) return;
+
+  const page = await imgPreviewDoc.getPage(pageNum);
+
+  const viewport = page.getViewport({
+    scale: 1.2
+  });
+
+  const canvas = document.getElementById("imgPreviewCanvas");
+  const ctx = canvas.getContext("2d");
+
+  canvas.width = viewport.width;
+  canvas.height = viewport.height;
+
+  await page.render({
+    canvasContext: ctx,
+    viewport
+  }).promise;
+  
+canvas.style.display = "block";
+
+  document.getElementById("imgPageLabel").textContent =
+    "Página " + pageNum + " / " + imgPreviewDoc.numPages;
+}
+
+function prevImgPage() {
+  if (imgPreviewDoc && imgPreviewPage > 1) {
+    imgPreviewPage--;
+    renderImgPreview(imgPreviewPage);
+  }
+}
+
+function nextImgPage() {
+  if (imgPreviewDoc && imgPreviewPage < imgPreviewDoc.numPages) {
+    imgPreviewPage++;
+    renderImgPreview(imgPreviewPage);
+  }
+}
+</script>
+
+
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc =
+'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+/* TABS */
+const tabs = document.querySelectorAll('.tab');
+
+tabs.forEach(t => {
+  t.onclick = () => {
+
+    tabs.forEach(x => x.classList.remove('active'));
+
+    document.querySelectorAll('.panel').forEach(p => {
+      p.classList.remove('active','blue','purple','orange');
+    });
+
+    t.classList.add('active');
+
+    const panel =
+      document.getElementById(t.dataset.tab);
+
+    panel.classList.add('active');
+
+    if (t.dataset.tab === "split") {
+      panel.classList.add("blue");
+    }
+
+    if (t.dataset.tab === "merge") {
+      panel.classList.add("purple");
+    }
+
+    if (t.dataset.tab === "img") {
+      panel.classList.add("orange");
+    }
+    if (t.dataset.tab === "compact") {
+  panel.classList.add("green");
+    }
+  };
+});
+
+/* DARK MODE + REFRESH */
+function refreshApp() {
+  location.reload();
+}
+
+function updateDarkIcon() {
+  const b = document.getElementById('darkToggle');
+
+  if (b) {
+    b.textContent =
+      document.body.classList.contains('dark')
+        ? '☀️'
+        : '🌙';
+  }
+}
+
+function toggleDark() {
+  document.body.classList.toggle('dark');
+
+  localStorage.setItem(
+    'darkMode',
+    document.body.classList.contains('dark')
+      ? '1'
+      : '0'
+  );
+
+  updateDarkIcon();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  if (localStorage.getItem('darkMode') === '1') {
+    document.body.classList.add('dark');
+  }
+
+  updateDarkIcon();
+});
+
+/* HELPERS */
+function download(blob, name) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  a.click();
+
+  setTimeout(() => {
+    URL.revokeObjectURL(a.href);
+  }, 2000);
+}
+
+function parsePages(txt, max) {
+  if (!txt.trim()) return [];
+
+  let out = [];
+
+  txt.split(',').forEach(part => {
+    part = part.trim();
+
+    if (part.includes('-')) {
+      let [a, b] = part.split('-').map(Number);
+
+      for (let i = a; i <= b; i++) {
+        if (i >= 1 && i <= max) out.push(i);
+      }
+    } else {
+      let n = parseInt(part);
+
+      if (n >= 1 && n <= max) {
+        out.push(n);
+      }
+    }
+  });
+
+  return [...new Set(out)];
+}
+/* =========================
+   PREVIEW - DIVIDIR PDF
+========================= */
+
+let splitPreviewDoc = null;
+let splitPreviewPage = 1;
+
+async function loadSplitPreview() {
+  const file = document.getElementById("splitFile").files[0];
+
+  if (!file) return;
+
+  const bytes = await file.arrayBuffer();
+
+  splitPreviewDoc = await pdfjsLib.getDocument({
+    data: bytes
+  }).promise;
+
+  splitPreviewPage = 1;
+
+  document.getElementById("splitPreviewInfo").textContent =
+    file.name + " • " + splitPreviewDoc.numPages + " páginas";
+
+  // Renderiza primeiro
+  await renderSplitPreview(1);
+
+  // Só depois mostra tudo
+  document.getElementById("splitContent").style.display = "block";
+}
+
+async function renderSplitPreview(pageNum) {
+  const page = await splitPreviewDoc.getPage(pageNum);
+
+  const viewport = page.getViewport({
+    scale: 1.2
+  });
+
+  const canvas = document.getElementById(
+    "splitPreviewCanvas"
+  );
+
+  const ctx = canvas.getContext("2d");
+
+  canvas.width = viewport.width;
+  canvas.height = viewport.height;
+
+  await page.render({
+    canvasContext: ctx,
+    viewport
+  }).promise;
+
+  document.getElementById("splitPageLabel").textContent =
+    "Página " + pageNum +
+    " / " + splitPreviewDoc.numPages;
+}
+
+function prevSplitPage() {
+  if (
+    splitPreviewDoc &&
+    splitPreviewPage > 1
+  ) {
+    splitPreviewPage--;
+    renderSplitPreview(splitPreviewPage);
+  }
+}
+
+function nextSplitPage() {
+  if (
+    splitPreviewDoc &&
+    splitPreviewPage < splitPreviewDoc.numPages
+  ) {
+    splitPreviewPage++;
+    renderSplitPreview(splitPreviewPage);
+  }
+}
+
+/* =========================
+   PREVIEW - JUNTAR PDF
+========================= */
+let mergePreviewDocs = [];
+let mergePreviewPages = [];
+
+async function buildMergeList() {
+
+  const files = [
+    ...document.getElementById("mergeFiles").files
+  ];
+
+  if (!files.length) return;
+
+  const box =
+    document.getElementById("mergeList");
+
+  box.insertAdjacentHTML("beforeend", `
+`);
+
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
+    const bytes = await file.arrayBuffer();
+
+    const pdf =
+      await pdfjsLib.getDocument({
+        data: bytes
+      }).promise;
+
+    box.innerHTML += `
+      <div class="card">
+
+        <b>${file.name}</b><br><br>
+
+<div class="mergePagesField" id="field_${i}" style="display:none">
+  Página(s):
+  <input
+    id="m_${i}"
+    placeholder="Ex: 1 ou 1,3"
+  >
+</div>
+
+        <br>
+
+        <div class="muted">
+          ${pdf.numPages} páginas
+        </div>
+
+        <canvas
+  id="mergeCanvas_${i}"
+  style="
+    display:none;
+    max-width:100%;
+    border:1px solid #ddd;
+    border-radius:8px;
+    margin-top:10px;
+  "
+        ></canvas>
+
+        <br><br>
+
+        <button
+          class="btn secondary"
+          onclick="prevMergeFilePage(${i})"
+        >
+          ◀
+        </button>
+
+        <span
+          id="mergeLabel_${i}"
+          class="muted"
+        ></span>
+
+        <button
+          class="btn secondary"
+          onclick="nextMergeFilePage(${i})"
+        >
+          ▶
+        </button>
+
+      </div>
+    `;
+
+    mergePreviewDocs[i] = pdf;
+    mergePreviewPages[i] = 1;
+
+    toggleMergePages();
+  }
+  for (let i = 0; i < files.length; i++) {
+  await renderMergeFilePage(i, 1);
+  }
+  document.getElementById("mergeContent").style.display = "block";
+}
+
+async function renderMergeFilePage(i, pageNum) {
+  const pdf = mergePreviewDocs[i];
+  const page = await pdf.getPage(pageNum);
+
+  const viewport = page.getViewport({
+    scale: 1.2
+  });
+
+  const canvas =
+    document.getElementById(
+      `mergeCanvas_${i}`
+    );
+
+  const ctx = canvas.getContext("2d");
+
+  canvas.width = viewport.width;
+  canvas.height = viewport.height;
+
+  await page.render({
+    canvasContext: ctx,
+    viewport
+  }).promise;
+  canvas.style.display = "block";
+  document.getElementById(
+    `mergeLabel_${i}`
+  ).textContent =
+    `Página ${pageNum} / ${pdf.numPages}`;
+}
+
+function prevMergeFilePage(i) {
+  if (mergePreviewPages[i] > 1) {
+    mergePreviewPages[i]--;
+    renderMergeFilePage(
+      i,
+      mergePreviewPages[i]
+    );
+  }
+}
+
+function nextMergeFilePage(i) {
+  if (
+    mergePreviewPages[i] <
+    mergePreviewDocs[i].numPages
+  ) {
+    mergePreviewPages[i]++;
+    renderMergeFilePage(
+      i,
+      mergePreviewPages[i]
+    );
+  }
+}
+async function extractRange() {
+  try {
+    const file =
+      document.getElementById("splitFile").files[0];
+
+    if (!file) {
+      alert("Selecione um PDF");
+      return;
+    }
+
+    const bytes = await file.arrayBuffer();
+
+    const src =
+      await PDFLib.PDFDocument.load(bytes);
+
+    const pages =
+      parsePages(
+        document.getElementById("pageSelect").value,
+        src.getPageCount()
+      );
+
+    if (!pages.length) {
+      alert("Informe páginas válidas");
+      return;
+    }
+
+    const useZip =
+      document.getElementById("zipMode").checked;
+
+    /* CASO 1 → apenas uma página */
+    if (pages.length === 1) {
+      const pageNumber = pages[0];
+
+      const out =
+        await PDFLib.PDFDocument.create();
+
+      const copied =
+        await out.copyPages(
+          src,
+          [pageNumber - 1]
+        );
+
+      out.addPage(copied[0]);
+
+      const pdfBytes =
+        await out.save();
+
+      download(
+        new Blob(
+          [pdfBytes],
+          {
+            type: "application/pdf"
+          }
+        ),
+        `pagina_${pageNumber}.pdf`
+      );
+
+      return;
+    }
+
+    /* CASO 2 → várias páginas + ZIP marcado */
+    if (useZip) {
+      const zip = new JSZip();
+
+      for (const pageNumber of pages) {
+        const out =
+          await PDFLib.PDFDocument.create();
+
+        const copied =
+          await out.copyPages(
+            src,
+            [pageNumber - 1]
+          );
+
+        out.addPage(copied[0]);
+
+        const pdfBytes =
+          await out.save();
+
+        zip.file(
+          `pagina_${pageNumber}.pdf`,
+          pdfBytes
+        );
+      }
+
+      const zipBlob =
+        await zip.generateAsync({
+          type: "blob"
+        });
+
+      download(
+        zipBlob,
+        "paginas.zip"
+      );
+
+      return;
+    }
+
+    /* CASO 3 → várias páginas sem ZIP */
+    for (const pageNumber of pages) {
+      const out =
+        await PDFLib.PDFDocument.create();
+
+      const copied =
+        await out.copyPages(
+          src,
+          [pageNumber - 1]
+        );
+
+      out.addPage(copied[0]);
+
+      const pdfBytes =
+        await out.save();
+
+      download(
+        new Blob(
+          [pdfBytes],
+          {
+            type: "application/pdf"
+          }
+        ),
+        `pagina_${pageNumber}.pdf`
+      );
+    }
+
+  } catch (e) {
+    console.error(e);
+    alert("Erro ao dividir PDF");
+  }
+}
+
+async function mergePdfs() {
+
+  try {
+
+    const files =
+      [...document.getElementById("mergeFiles").files];
+
+    if (!files.length) {
+      alert("Selecione PDFs");
+      return;
+    }
+
+    const mergeMode =
+      document.querySelector(
+        'input[name="mergeMode"]:checked'
+      ).value;
+
+    const colorMode =
+      document.querySelector(
+        'input[name="colorMode"]:checked'
+      ).value;
+
+    const keepColorPages =
+      parsePages(
+        document.getElementById("keepColorPages").value || "",
+        99999
+      );
+
+    const out =
+      await PDFLib.PDFDocument.create();
+
+    let globalPage = 1;
+
+    document.getElementById("mergeStatus").textContent =
+      "Processando...";
+
+    for (let i = 0; i < files.length; i++) {
+   
+      const file = files[i];
+
+      const bytes =
+        await file.arrayBuffer();
+
+      const pdf =
+        await pdfjsLib.getDocument({
+          data: bytes
+        }).promise;
+
+      let idx = [];
+
+      if (mergeMode === "all") {
+
+        idx = [...Array(pdf.numPages).keys()].map(x => x + 1);
+
+      } else {
+
+        const txt =
+          document.getElementById(`m_${i}`)?.value || "";
+
+        idx =
+          parsePages(txt, pdf.numPages);
+      }
+
+      for (const pageNum of idx) {
+
+        const page =
+          await pdf.getPage(pageNum);
+
+        const viewport =
+          page.getViewport({ scale: 2 });
+
+        const canvas =
+          document.createElement("canvas");
+
+        const ctx =
+          canvas.getContext("2d");
+
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+
+        await page.render({
+          canvasContext: ctx,
+          viewport
+        }).promise;
+
+        const keepColor =
+          keepColorPages.includes(globalPage);
+
+        if (
+          colorMode === "bw" &&
+          !keepColor
+        ) {
+
+          const img =
+            ctx.getImageData(
+              0,
+              0,
+              canvas.width,
+              canvas.height
+            );
+
+          const d = img.data;
+
+          for (let p = 0; p < d.length; p += 4) {
+
+            const gray =
+              0.3 * d[p] +
+              0.59 * d[p + 1] +
+              0.11 * d[p + 2];
+
+            d[p] = gray;
+            d[p + 1] = gray;
+            d[p + 2] = gray;
+          }
+
+          ctx.putImageData(img, 0, 0);
+        }
+
+        const jpg =
+          canvas.toDataURL(
+            "image/jpeg",
+            0.92
+          );
+
+        const imgBytes =
+          await fetch(jpg).then(r => r.arrayBuffer());
+
+        const embedded =
+          await out.embedJpg(imgBytes);
+
+        const newPage =
+          out.addPage([
+            canvas.width,
+            canvas.height
+          ]);
+
+        newPage.drawImage(
+          embedded,
+          {
+            x: 0,
+            y: 0,
+            width: canvas.width,
+            height: canvas.height
+          }
+        );
+
+        globalPage++;
+      }
+    }
+
+    const finalPdf =
+      await out.save();
+
+    download(
+      new Blob(
+        [finalPdf],
+        { type: "application/pdf" }
+      ),
+      "pdf_final.pdf"
+    );
+
+    document.getElementById("mergeStatus").textContent =
+      "Concluído.";
+
+  } catch (e) {
+
+    console.error(e);
+
+    alert("Erro ao gerar PDF final");
+  }
+}
+function toggleMergePages() {
+
+  const mode = document.querySelector(
+    'input[name="mergeMode"]:checked'
+  ).value;
+
+  const fields = document.querySelectorAll(".mergePagesField");
+
+  fields.forEach(el => {
+    el.style.display =
+      mode === "custom"
+        ? "block"
+        : "none";
+  });
+}
+</script>
+</body>
+</html>
